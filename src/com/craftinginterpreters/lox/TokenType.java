@@ -7,7 +7,7 @@ public enum TokenType {
     // one or two character tokens
     BANG, BANG_EQUAL, EQUAL, EQUAL_EQUAL,
     GREATER, GREATER_THAN, LESS, LESS_THAN,
-    // literals
+    // literals 标识符 字符串字面量 数值字面量
     IDENTIFIER, STRING, NUMBER,
     // keywords
     AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NIL, OR,
