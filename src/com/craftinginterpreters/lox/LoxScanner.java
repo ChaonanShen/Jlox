@@ -17,6 +17,27 @@ public class LoxScanner {
     private int current = 0;
     private int line = 1;
 
+    private static final Map<String, TokenType> keywords;
+    static {
+        keywords = new HashMap<>();
+        keywords.put("and", AND);
+        keywords.put("class", CLASS);
+        keywords.put("else", ELSE);
+        keywords.put("false", FALSE);
+        keywords.put("for", FOR);
+        keywords.put("fun", FUN);
+        keywords.put("if", IF);
+        keywords.put("nil", NIL);
+        keywords.put("or", OR);
+        keywords.put("print", PRINT);
+        keywords.put("return", RETURN);
+        keywords.put("super", SUPER);
+        keywords.put("this", THIS);
+        keywords.put("true", TRUE);
+        keywords.put("var", VAR);
+        keywords.put("while", WHILE);
+    }
+
     LoxScanner(String source) {
         this.source = source;
     }
@@ -74,11 +95,26 @@ public class LoxScanner {
                 // number literal
                 if (isDigit(c)) {
                     getNumberLiteral();
+                } else if(isAlpha(c)) {
+                    getIdentifier(); // identifiers or keywords(include true/false/nil) - 反正都是个字符串
                 } else {
                     Lox.error(line, "Unexpected character.");
                 }
                 break;
         }
+    }
+
+    private void getIdentifier() {
+        while (isAlphaNum(peek())) {
+            advance();
+        }
+        // 出来后，这个current指向identifier之后的那个字符
+        String value = source.substring(start, current);
+
+        // is this keyword(include true/false/nil)?
+        TokenType type = keywords.get(value);
+        if (type == null) type = IDENTIFIER;
+        addToken(type);
     }
 
     private void getNumberLiteral() {
@@ -126,19 +162,27 @@ public class LoxScanner {
     }
 
     private char peek() {
-        // 查看当前char是啥
+        // 查看下一个char是啥(注意current指向下一个char,当前char在c中)
         if (isAtEnd()) return '\0';
         return source.charAt(current);
     }
 
-    private char peekNext() {
-        // 查看下一个char是啥
+    private char peekNext() { // 这个interpreter只需要最多向前看两个chars
+        // 查看下两个char是啥
         if (current+1 >= source.length()) return '\0';
         return source.charAt(current+1);
     }
 
     private boolean isDigit(char c) {
         return c >= '0' && c <= '9';
+    }
+
+    private boolean isAlpha(char c) {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+    }
+
+    private boolean isAlphaNum(char c) {
+        return isAlpha(c) || isDigit(c);
     }
 
     private boolean isAtEnd() {
