@@ -1,2 +1,13 @@
-()= **// hello world
-+-   // just for fun
+// 16 keywords
+and class else false for fun if nil or print return super this true var while
+// identifiers
+orrr hello jack _world how_are_you fine456
+// this is a comment
+(( )){} // grouping stuff
+!*+-/=<> <<== == !!= // operators
+1.414
+> "hello world" // single-line string
+> "hello world
+how are you" // multi-line string
+// Unterminated string
+"unterminated
