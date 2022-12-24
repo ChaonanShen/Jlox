@@ -10,4 +10,13 @@ orrr hello jack _world how_are_you fine456
 > "hello world
 how are you" // multi-line string
 // Unterminated string
-"unterminated
+"unterminated"
+/*  hello
+world
+how are you */
+fine
+true false
+/* hello world */
+ok nice
+// unterminated block comment
+/* hello

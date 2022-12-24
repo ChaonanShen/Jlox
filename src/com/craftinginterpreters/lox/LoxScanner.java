@@ -5,9 +5,6 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.craftinginterpreters.lox.Token;
-import com.craftinginterpreters.lox.TokenType;
-
 import static com.craftinginterpreters.lox.TokenType.*;
 
 public class LoxScanner {
@@ -75,8 +72,19 @@ public class LoxScanner {
             case '>': addToken(match('=') ? GREATER_THAN : GREATER); break;
             case '/':
                 if (match('/')) {
-                    // 是注释，直接跳过一行
+                    // line comment，直接跳过一行
                     while (peek() != '\n' && !isAtEnd()) advance();
+                } else if (match('*')) {
+                    // block comment，找到下一个*/ --> *也要变成需要lookahead一个字符才能完成
+                    while(!isAtEnd() && peek() != '*' && peekNext() != '/') {
+                        if (peek() == '\n') line++;
+                        advance();
+                    }
+                    if (isAtEnd()) {
+                        Lox.error(line, "Unterminated block comment.");
+                        return;
+                    }
+                    advance(); advance(); // consume "*/"
                 } else {
                     addToken(SLASH);
                 }
