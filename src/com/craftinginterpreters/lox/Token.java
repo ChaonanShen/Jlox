@@ -1,7 +1,5 @@
 package com.craftinginterpreters.lox;
 
-import com.craftinginterpreters.lox.TokenType;
-
 public class Token {
     final TokenType type; // final修饰变量表示常量，初次赋值后便不能再改
     final String lexeme;
