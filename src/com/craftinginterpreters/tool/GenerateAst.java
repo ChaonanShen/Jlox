@@ -29,6 +29,13 @@ public class GenerateAst {
         writer.println();
         writer.println("abstract class " + baseName + " {");
 
+        // the base accept() method -- 作者把这个放在abstract class Expr的末尾，我觉得放在开头清晰些
+        writer.println("  abstract <R> R accept(Visitor<R> visitor);");
+        writer.println();
+
+        // generate visitor interface 里面包含各个expression classes的visitXXX方法
+        defineVisitor(writer, baseName, types); // the visitor pattern
+
         // generate AST classes.
         for (String type : types) {
             String className = type.split(":")[0].trim();
@@ -38,6 +45,15 @@ public class GenerateAst {
 
         writer.println("}");
         writer.close();
+    }
+
+    private static void defineVisitor(PrintWriter writer, String baseName, List<String> types) {
+        writer.println("  interface Visitor<R> {");
+        for (String type : types) {
+            String typeName = type.split(":")[0].trim();
+            writer.println("    R visit" + typeName + baseName + "(" + typeName + " " + baseName.toLowerCase() + ");");
+        }
+        writer.println("  }");
     }
 
     private static void defineType(PrintWriter writer,
@@ -57,7 +73,13 @@ public class GenerateAst {
             writer.println("      this." + name + " = " + name + ";");
         }
         writer.println("    }");
+
+        // visitor pattern
         writer.println();
+        writer.println("    @Override");
+        writer.println("    <R> R accept(Visitor<R> visitor) {");
+        writer.println("      return visitor.visit" + className + baseName + "(this);");
+        writer.println("    }");
 
         // fields definition
         for (String field : fields) {
