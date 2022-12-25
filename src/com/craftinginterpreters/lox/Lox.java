@@ -44,22 +44,31 @@ public class Lox {
 
     // 用run每次解析一行source string
     private static void run(String source) {
-        // Scanner/Token自定义
+        // lexing
         LoxScanner scanner = new LoxScanner(source);
         List<Token> tokens = scanner.scanTokens();
 
-        // for now, just print all tokens
-        for (Token token : tokens) {
-            System.out.println(token);
-        }
+        // parsing
+        Parser parser = new Parser(tokens);
+        Expr expression = parser.parse();
+        if (hadError) return; // hadError是被调用report后设置，report会打印错误信息
+
+        System.out.println(new AstPrinter().print(expression));
     }
 
     // report error
-    static void error(int line, String msg) {
-        report(line, "", msg);
-    }
     private static void report(int line, String where, String msg) {
         System.err.println("[line " + line + "] Error" + where + ": " + msg);
         hadError = true;
+    }
+    static void error(int line, String msg) {
+        report(line, "", msg);
+    }
+    static void error(Token token, String msg) {
+        if (token.type == TokenType.EOF) {
+            report(token.line, " at end", msg);
+        } else {
+            report(token.line, " at '" + token.lexeme + "'", msg);
+        }
     }
 }
