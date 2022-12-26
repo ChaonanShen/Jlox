@@ -12,6 +12,7 @@ public class Parser {
         this.tokens = tokens;
     }
 
+    // 对外公共接口
     Expr parse() {
         try {
             return expression();
