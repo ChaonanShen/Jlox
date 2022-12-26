@@ -6,7 +6,7 @@ public enum TokenType {
     COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR,
     // one or two character tokens
     BANG, BANG_EQUAL, EQUAL, EQUAL_EQUAL,
-    GREATER, GREATER_THAN, LESS, LESS_THAN,
+    GREATER, GREATER_EQUAL, LESS, LESS_EQUAL,
     // literals 标识符 字符串字面量 数值字面量
     IDENTIFIER, STRING, NUMBER,
     // keywords

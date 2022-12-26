@@ -45,7 +45,7 @@ public class Lox {
     // 用run每次解析一行source string
     private static void run(String source) {
         // lexing
-        LoxScanner scanner = new LoxScanner(source);
+        Scanner scanner = new Scanner(source);
         List<Token> tokens = scanner.scanTokens();
 
         // parsing
@@ -54,6 +54,10 @@ public class Lox {
         if (hadError) return; // hadError是被调用report后设置，report会打印错误信息
 
         System.out.println(new AstPrinter().print(expression));
+
+        // interpreting
+        Interpreter interpreter = new Interpreter();
+        System.out.println(interpreter.evaluate(expression).toString());
     }
 
     // report error
