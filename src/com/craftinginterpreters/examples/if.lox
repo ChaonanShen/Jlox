@@ -1,0 +1,13 @@
+var b = true;
+
+if (b) {
+  print "yes";
+} else {
+  print "no";
+}
+
+if (!b) {
+  print "yes";
+} else {
+  print "no";
+}

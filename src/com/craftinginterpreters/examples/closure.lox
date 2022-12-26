@@ -1,0 +1,10 @@
+fun returnFunc() {
+  var outside = "outside";
+  fun inner() {
+    print outside;
+  }
+  return inner;
+}
+
+var fn = returnFunc();
+fn();
