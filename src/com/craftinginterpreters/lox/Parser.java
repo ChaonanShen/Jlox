@@ -22,6 +22,20 @@ public class Parser {
         return statements;
     }
 
+    // ---- parse statements ----
+    /*
+    program     -> declaration* EOF ;
+    declaration -> varDecl
+                 | statement ;
+    varDecl     -> "var" IDENTIFIER ( "=" expression )? ";" ;
+    statement   -> exprStmt
+                 | printStmt
+                 | block ;
+    exprStmt    -> expression ";" ;
+    printStmt   -> "print" expression ";" ;
+    block       -> "{" declaration* "}" ;
+    */
+
     private Stmt declaration() {
         try {
             if (match(VAR)) return varDeclaration();
@@ -46,6 +60,7 @@ public class Parser {
 
     private Stmt statement() {
         if (match(PRINT)) return printStatement();
+        else if (match(LEFT_BRACE)) return new Stmt.Block(block());
         else return expressionStatement(); // 没法从第一个token判断是否是expressionStatement
     }
 
@@ -61,10 +76,23 @@ public class Parser {
         return new Stmt.Expression(expr);
     }
 
+    private List<Stmt> block() { // 之后的function body等也都复用block()
+        List<Stmt> statements = new ArrayList<>();
+
+        while (!check(RIGHT_BRACE) && !isAtEnd()) {
+            statements.add(declaration());
+        }
+
+        consume(RIGHT_BRACE, "Expect '}' after block.");
+        return statements;
+    }
+
 
     // ---- parse expressions ----
     /*
-    expression -> equality ;
+    expression -> assignment ;
+    assignment -> IDENTIFIER "=" assignment
+                | equality ;
     equality   -> comparison ( ( "!=" | "==" ) comparison )* ;
     comparison -> term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
     term       -> factor ( ( "-" | "+" ) factor )*;
@@ -75,7 +103,25 @@ public class Parser {
      */
 
     private Expr expression() {
-        return equality();
+        return assignment();
+    }
+
+    private Expr assignment() {
+        Expr expr = equality();
+
+        if (match(EQUAL)) {
+            Token equals = previous();
+            Expr value = assignment();
+
+            if (expr instanceof Expr.Variable) {
+                Token name = ((Expr.Variable)expr).name;
+                return new Expr.Assign(name, value);
+            }
+
+            error(equals, "Invalid assignment target.");
+        }
+
+        return expr;
     }
 
     private Expr equality() {

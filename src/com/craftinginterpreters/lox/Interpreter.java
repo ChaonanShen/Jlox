@@ -3,7 +3,7 @@ package com.craftinginterpreters.lox;
 import java.util.List;
 class Interpreter implements Expr.Visitor<Object>,
                              Stmt.Visitor<Void> {
-    private final Environment environment = new Environment();
+    private Environment environment = new Environment();
 
     // 对外公共接口
     void interpret(List<Stmt> statements) {
@@ -24,7 +24,26 @@ class Interpreter implements Expr.Visitor<Object>,
         return expr.accept(this); // 比如Binary就会调用this(interpreter).visitBinaryExpr(expr)
     }
 
+    private void executeBlock(List<Stmt> statements, Environment environment) {
+        Environment previous = this.environment;
+        try {
+            this.environment = environment; // 直接替换当前Interpreter的environment
+
+            for (Stmt statement : statements) {
+                execute(statement);
+            }
+        } finally {
+            this.environment = previous; // 恢复环境
+        }
+    }
+
     // Stmt.Visitor<Void>的几个override函数
+    @Override
+    public Void visitBlockStmt(Stmt.Block stmt) {
+        executeBlock(stmt.statements, new Environment(environment));
+        return null;
+    }
+
     @Override
     public Void visitExpressionStmt(Stmt.Expression stmt) {
         evaluate(stmt.expression);
@@ -49,6 +68,13 @@ class Interpreter implements Expr.Visitor<Object>,
     }
 
     // 下面四个是Expr.Visitor<Object>的四个override函数
+    @Override
+    public Object visitAssignExpr(Expr.Assign expr) {
+        Object value = evaluate(expr.value);
+        environment.assign(expr.name, value);
+        return value;
+    }
+
     @Override
     public Object visitBinaryExpr(Expr.Binary expr) {
         Object left = evaluate(expr.left);

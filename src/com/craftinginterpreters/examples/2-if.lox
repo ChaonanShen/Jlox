@@ -1,13 +1,11 @@
 var b = true;
 
-if (b) {
+if (b)
   print "yes";
-} else {
+else
   print "no";
-}
 
-if (!b) {
+if (!b)
   print "yes";
-} else {
+else
   print "no";
-}
