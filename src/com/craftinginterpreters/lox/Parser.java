@@ -31,10 +31,12 @@ public class Parser {
     statement   -> exprStmt
                  | ifStmt
                  | printStmt
+                 | whileStmt
                  | block ;
     exprStmt    -> expression ";" ;
     ifStmt      -> "if" "(" expression ")" statement ( "else" statement )? ;
     printStmt   -> "print" expression ";" ;
+    whileStmt   -> "while" "(" expression ")" statement;
     block       -> "{" declaration* "}" ;
     */
 
@@ -64,11 +66,12 @@ public class Parser {
         if (match(PRINT)) return printStatement();
         else if (match(LEFT_BRACE)) return new Stmt.Block(block());
         else if (match(IF)) return ifStatement();
+        else if (match(WHILE)) return whileStatement();
         else return expressionStatement(); // 没法从第一个token判断是否是expressionStatement
     }
 
     private Stmt ifStatement() {
-        consume(LEFT_PAREN, "Expect '(' before if-condition.");
+        consume(LEFT_PAREN, "Expect '(' after if.");
         Expr condition = expression();
         consume(RIGHT_PAREN, "Expect ')' after if-condition.");
         Stmt thenBranch = statement();
@@ -77,6 +80,14 @@ public class Parser {
             elseBranch = statement();
         }
         return new Stmt.If(condition, thenBranch, elseBranch);
+    }
+
+    private Stmt whileStatement() {
+        consume(LEFT_PAREN, "Expect '(' after while.");
+        Expr condition = expression();
+        consume(RIGHT_PAREN, "Expect ')' after while-condition.");
+        Stmt body = statement();
+        return new Stmt.While(condition, body);
     }
 
     private Stmt printStatement() {

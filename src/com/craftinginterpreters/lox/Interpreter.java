@@ -83,6 +83,14 @@ class Interpreter implements Expr.Visitor<Object>,
         return null;
     }
 
+    @Override
+    public Void visitWhileStmt(Stmt.While stmt) { // 这个实现有点像直接Lox映射到Java
+        while (isTruthy(evaluate(stmt.condition))) { // 执行body后environment会不同，重新eval(cond)会不同
+            execute(stmt.body);
+        }
+        return null;
+    }
+
     // 下面四个是Expr.Visitor<Object>的四个override函数
     @Override
     public Object visitAssignExpr(Expr.Assign expr) {
