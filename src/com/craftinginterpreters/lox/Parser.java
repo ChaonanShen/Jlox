@@ -29,9 +29,11 @@ public class Parser {
                  | statement ;
     varDecl     -> "var" IDENTIFIER ( "=" expression )? ";" ;
     statement   -> exprStmt
+                 | ifStmt
                  | printStmt
                  | block ;
     exprStmt    -> expression ";" ;
+    ifStmt      -> "if" "(" expression ")" statement ( "else" statement )? ;
     printStmt   -> "print" expression ";" ;
     block       -> "{" declaration* "}" ;
     */
@@ -61,7 +63,20 @@ public class Parser {
     private Stmt statement() {
         if (match(PRINT)) return printStatement();
         else if (match(LEFT_BRACE)) return new Stmt.Block(block());
+        else if (match(IF)) return ifStatement();
         else return expressionStatement(); // 没法从第一个token判断是否是expressionStatement
+    }
+
+    private Stmt ifStatement() {
+        consume(LEFT_PAREN, "Expect '(' before if-condition.");
+        Expr condition = expression();
+        consume(RIGHT_PAREN, "Expect ')' after if-condition.");
+        Stmt thenBranch = statement();
+        Stmt elseBranch = null;
+        if (match(ELSE)) {
+            elseBranch = statement();
+        }
+        return new Stmt.If(condition, thenBranch, elseBranch);
     }
 
     private Stmt printStatement() {

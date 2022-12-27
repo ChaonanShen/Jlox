@@ -67,6 +67,17 @@ class Interpreter implements Expr.Visitor<Object>,
         return null;
     }
 
+    @Override
+    public Void visitIfStmt(Stmt.If stmt) {
+        boolean cond = isTruthy(evaluate(stmt.condition));
+        if (cond) {
+            execute(stmt.thenBranch);
+        } else if (stmt.elseBranch != null) {
+            execute(stmt.elseBranch);
+        }
+        return null;
+    }
+
     // 下面四个是Expr.Visitor<Object>的四个override函数
     @Override
     public Object visitAssignExpr(Expr.Assign expr) {
