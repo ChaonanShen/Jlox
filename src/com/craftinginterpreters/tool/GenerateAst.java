@@ -12,11 +12,21 @@ public class GenerateAst {
             System.exit(64);
         }
         String outputDir = args[0]; // IDEA中设置下program arguments(设置成lox文件夹路径)
+
+        // 定义Expr类那一套visit pattern
         defineAst(outputDir, "Expr", Arrays.asList(
             "Binary   : Expr left, Token operator, Expr right",
             "Grouping : Expr expression",
             "Literal  : Object value",
-            "Unary    : Token operator, Expr right"
+            "Unary    : Token operator, Expr right",
+            "Variable : Token name"
+        ));
+
+        // 定义Stmt类那一套visit pattern
+        defineAst(outputDir, "Stmt", Arrays.asList(
+            "Expression : Expr expression",
+            "Print      : Expr expression",
+            "Var        : Token name, Expr initializer"
         ));
     }
 
@@ -25,8 +35,8 @@ public class GenerateAst {
 
         writer.println("package com.craftinginterpreters.lox;");
         writer.println();
-        writer.println("import java.util.List;");
-        writer.println();
+//        writer.println("import java.util.List;");
+//        writer.println();
         writer.println("abstract class " + baseName + " {");
 
         // the base accept() method -- 作者把这个放在abstract class Expr的末尾，我觉得放在开头清晰些

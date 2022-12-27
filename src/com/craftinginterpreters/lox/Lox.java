@@ -54,13 +54,11 @@ public class Lox {
 
         // parsing
         Parser parser = new Parser(tokens);
-        Expr expression = parser.parse();
+        List<Stmt> statements = parser.parse();
         if (hadError) return; // hadError是被调用report后设置，report会打印错误信息
 
-        System.out.println(new AstPrinter().print(expression));
-
         // interpreting
-        interpreter.interpret(expression);
+        interpreter.interpret(statements);
     }
 
     // report error

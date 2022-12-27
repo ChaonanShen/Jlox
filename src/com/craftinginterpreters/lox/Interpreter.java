@@ -1,20 +1,54 @@
 package com.craftinginterpreters.lox;
 
-class Interpreter implements Expr.Visitor<Object> {
+import java.util.List;
+class Interpreter implements Expr.Visitor<Object>,
+                             Stmt.Visitor<Void> {
+    private final Environment environment = new Environment();
+
     // 对外公共接口
-    void interpret(Expr expression) {
+    void interpret(List<Stmt> statements) {
         try {
-            Object value = evaluate(expression);
-            System.out.println(stringify(value));
+            for (Stmt statement : statements) {
+                execute(statement);
+            }
         } catch (RuntimeError error) {
             Lox.runtimeError(error);
         }
     }
 
-    private Object evaluate(Expr expr) {
-        return expr.accept(this);
+    private void execute(Stmt stmt) { // 调用这个就能按照Stmt类型调用各自接口
+        stmt.accept(this); // 比如Print语句就会调用this(interpreter).visitPrintStmt(stmt)
     }
 
+    private Object evaluate(Expr expr) { // 调用这个就能按照Expr类型调用各自接口
+        return expr.accept(this); // 比如Binary就会调用this(interpreter).visitBinaryExpr(expr)
+    }
+
+    // Stmt.Visitor<Void>的几个override函数
+    @Override
+    public Void visitExpressionStmt(Stmt.Expression stmt) {
+        evaluate(stmt.expression);
+        return null;
+    }
+
+    @Override
+    public Void visitPrintStmt(Stmt.Print stmt) {
+        Object value = evaluate(stmt.expression);
+        System.out.println(stringify(value));
+        return null;
+    }
+
+    @Override
+    public Void visitVarStmt(Stmt.Var stmt) {
+        Object value = null;
+        if (stmt.initializer != null) { // 这样就允许variable不必一定要初始化
+            value = evaluate(stmt.initializer);
+        }
+        environment.define(stmt.name.lexeme, value);
+        return null;
+    }
+
+    // 下面四个是Expr.Visitor<Object>的四个override函数
     @Override
     public Object visitBinaryExpr(Expr.Binary expr) {
         Object left = evaluate(expr.left);
@@ -48,7 +82,7 @@ class Interpreter implements Expr.Visitor<Object> {
                     return (double)left + (double)right;
                 }
                 if (left instanceof String && right instanceof String) { // concatenate strings
-                    return (String)left + (String)right;
+                    return left + (String)right;
                 }
                 // throw error?
                 break;
@@ -88,6 +122,11 @@ class Interpreter implements Expr.Visitor<Object> {
 
         // unreachable
         return null;
+    }
+
+    @Override
+    public Object visitVariableExpr(Expr.Variable expr) { // 遇到一个variable，直接返回值
+        return environment.get(expr.name);
     }
 
     private void checkNumberOperand(Token operator, Object operand) {

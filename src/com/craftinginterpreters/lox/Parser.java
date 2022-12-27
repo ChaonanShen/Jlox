@@ -1,5 +1,6 @@
 package com.craftinginterpreters.lox;
 
+import java.util.ArrayList;
 import java.util.List;
 import static com.craftinginterpreters.lox.TokenType.*;
 
@@ -13,16 +14,55 @@ public class Parser {
     }
 
     // 对外公共接口
-    Expr parse() {
+    List<Stmt> parse() {
+        List<Stmt> statements = new ArrayList<>();
+        while (!isAtEnd()) {
+            statements.add(declaration());
+        }
+        return statements;
+    }
+
+    private Stmt declaration() {
         try {
-            return expression();
+            if (match(VAR)) return varDeclaration();
+            else return statement();
         } catch (ParseError error) {
-            // 现在只有expression没有statement，所以遇到错误直接返回到最上层
-            // 之后有了statement再进行error recovery(synchronization等)
+            synchronize();
             return null;
         }
     }
 
+    private Stmt varDeclaration() {
+        Token name = consume(IDENTIFIER, "Expect variable name.");
+
+        Expr initializer = null;
+        if (match(EQUAL)) {
+            initializer = expression();
+        }
+
+        consume(SEMICOLON, "Expect ';' after variable declaration.");
+        return new Stmt.Var(name, initializer);
+    }
+
+    private Stmt statement() {
+        if (match(PRINT)) return printStatement();
+        else return expressionStatement(); // 没法从第一个token判断是否是expressionStatement
+    }
+
+    private Stmt printStatement() {
+        Expr value = expression(); // 匹配一个expression
+        consume(SEMICOLON, "Expect ';' after value."); // must be ; at last
+        return new Stmt.Print(value);
+    }
+
+    private Stmt expressionStatement() {
+        Expr expr = expression();
+        consume(SEMICOLON, "Expect ';' after expression.");
+        return new Stmt.Expression(expr);
+    }
+
+
+    // ---- parse expressions ----
     /*
     expression -> equality ;
     equality   -> comparison ( ( "!=" | "==" ) comparison )* ;
@@ -31,7 +71,7 @@ public class Parser {
     factor     -> unary ( ( "/" | "*" ) unary )* ;
     unary      -> ( "!" | "-" ) unary
                 | primary ;
-    primary    -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
+    primary    -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER;
      */
 
     private Expr expression() {
@@ -109,6 +149,10 @@ public class Parser {
             Expr expr = expression();
             consume(RIGHT_PAREN, "Except ')' after expression.");
             return new Expr.Grouping(expr);
+        }
+
+        if (match(IDENTIFIER)) {
+            return new Expr.Variable(previous());
         }
 
         // 好像没有处理tokens只有一个EOF的情景？
