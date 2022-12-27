@@ -107,7 +107,9 @@ public class Parser {
     /*
     expression -> assignment ;
     assignment -> IDENTIFIER "=" assignment
-                | equality ;
+                | logic_or ;
+    logic_or   -> logic_and ( "or" logic_and )* ;
+    logic_and  -> equality ( "and" equality )* ;
     equality   -> comparison ( ( "!=" | "==" ) comparison )* ;
     comparison -> term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
     term       -> factor ( ( "-" | "+" ) factor )*;
@@ -122,9 +124,9 @@ public class Parser {
     }
 
     private Expr assignment() {
-        Expr expr = equality();
+        Expr expr = logic_or();
 
-        if (match(EQUAL)) {
+        if (match(EQUAL)) { // 说明是assignment
             Token equals = previous();
             Expr value = assignment();
 
@@ -136,6 +138,28 @@ public class Parser {
             error(equals, "Invalid assignment target.");
         }
 
+        return expr;
+    }
+
+    private Expr logic_or() {
+        Expr expr = logic_and();
+
+        while (match(OR)) {
+            Token operator = previous();
+            Expr right = logic_and();
+            expr = new Expr.Logical(expr, operator, right);
+        }
+        return expr;
+    }
+
+    private Expr logic_and() {
+        Expr expr = equality();
+
+        while (match(AND)) {
+            Token operator = previous();
+            Expr right = equality();
+            expr = new Expr.Logical(expr, operator, right);
+        }
         return expr;
     }
 

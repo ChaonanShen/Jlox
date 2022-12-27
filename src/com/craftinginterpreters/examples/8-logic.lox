@@ -1,0 +1,41 @@
+// should be F T T T T T / T F F F F F
+print false or false or false;
+print true or false or false;
+print true or true or false;
+print true or true or true;
+print false or false or true;
+print false or true or true;
+
+print "\n";
+
+print true and true and true;
+print true and true and false;
+print true and false and false;
+print false and false and false;
+print false and true and true;
+print false and false and true;
+
+print "\n";
+
+print (1 < 2) or (1 > 2); // T
+print (1 > 2) and (1 == 1); // F
+
+print "\n";
+
+// test side effect left
+var a = false;
+true or (a = true); // a = true不应该执行
+if (!a) {
+  print "right";
+} else {
+  print "wrong";
+}
+
+false and (a = true); // a = true不应该执行
+if (!a) {
+  print "right";
+} else {
+  print "wrong";
+}
+
+// 意外发现这个print "\n"; 现在还是直接输出\n的问题

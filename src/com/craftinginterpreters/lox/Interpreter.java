@@ -1,6 +1,11 @@
 package com.craftinginterpreters.lox;
 
+import com.sun.corba.se.impl.ior.OldJIDLObjectKeyTemplate;
+
 import java.util.List;
+
+import static com.craftinginterpreters.lox.TokenType.*;
+
 class Interpreter implements Expr.Visitor<Object>,
                              Stmt.Visitor<Void> {
     private Environment environment = new Environment();
@@ -142,6 +147,22 @@ class Interpreter implements Expr.Visitor<Object>,
     @Override
     public Object visitLiteralExpr(Expr.Literal expr) {
         return expr.value;
+    }
+
+    @Override
+    public Object visitLogicalExpr(Expr.Logical expr) { // 特别注意 短路法则 right在不必要eval时不应该eval，因为可能有side effect！
+        Object left = evaluate(expr.left);
+
+        switch (expr.operator.type) { // 自己写的时候没法写出这样简洁的代码！
+            case OR:
+                if (isTruthy(left)) return left;
+                else return evaluate(expr.right);
+            case AND:
+                if (!isTruthy(left)) return left;
+                else return evaluate(expr.right);
+            default:
+                throw new RuntimeError(expr.operator, "Logical operator must be OR/AND.");
+        }
     }
 
     @Override
