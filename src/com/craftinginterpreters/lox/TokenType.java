@@ -10,6 +10,6 @@ public enum TokenType {
     // literals 标识符 字符串字面量 数值字面量
     IDENTIFIER, STRING, NUMBER,
     // keywords
-    AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NIL, OR,
+    AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NIL, OR, BREAK,
     PRINT, RETURN, SUPER, THIS, TRUE, VAR, WHILE, EOF
 }

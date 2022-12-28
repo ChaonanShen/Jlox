@@ -1,5 +1,9 @@
 package com.craftinginterpreters.lox;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
@@ -26,6 +30,7 @@ public class Scanner {
         keywords.put("if", IF);
         keywords.put("nil", NIL);
         keywords.put("or", OR);
+        keywords.put("break", BREAK);
         keywords.put("print", PRINT);
         keywords.put("return", RETURN);
         keywords.put("super", SUPER);
@@ -200,5 +205,15 @@ public class Scanner {
         // lexeme按照start-current截取str, line由Scanner维护, 遇'\n'自增
         String text = source.substring(start, current);
         tokens.add(new Token(type, text, literal, line));
+    }
+
+    public static void main(String[] args) throws IOException {
+        if (args.length != 1) System.out.println("Usage: scanner [script]");
+        byte[] bytes = Files.readAllBytes(Paths.get(args[0]));
+        Scanner scanner = new Scanner(new String(bytes, Charset.defaultCharset()));
+        List<Token> tokens = scanner.scanTokens();
+        for (Token token : tokens) {
+            System.out.println(token.toString() + " line " + token.line);
+        }
     }
 }
