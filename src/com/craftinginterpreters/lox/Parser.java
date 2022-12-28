@@ -34,12 +34,14 @@ public class Parser {
                  | ifStmt
                  | printStmt
                  | whileStmt
+                 | breakStmt
                  | block ;
     exprStmt    -> expression ";" ;
     forStmt     -> "for" "(" ( varDecl | exprStmt | ";" ) expression? ";" expression? ")" statement ;
     ifStmt      -> "if" "(" expression ")" statement ( "else" statement )? ;
     printStmt   -> "print" expression ";" ;
     whileStmt   -> "while" "(" expression ")" statement;
+    breakStmt   -> "break" ";" ;
     block       -> "{" declaration* "}" ;
     */
 
@@ -71,7 +73,13 @@ public class Parser {
         else if (match(IF)) return ifStatement();
         else if (match(WHILE)) return whileStatement();
         else if (match(FOR)) return forStatement();
+        else if (match(BREAK)) return breakStatement();
         else return expressionStatement(); // 没法从第一个token判断是否是expressionStatement
+    }
+
+    private Stmt breakStatement() {
+        consume(SEMICOLON, "Expect ';' after break.");
+        return new Stmt.Break();
     }
 
     private Stmt ifStatement() {

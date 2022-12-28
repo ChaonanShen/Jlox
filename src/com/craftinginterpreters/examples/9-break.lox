@@ -1,0 +1,94 @@
+print "1: 0"; // 单纯的break
+for ( ; ; ) {
+  print "0";
+  break;
+}
+while (1) {
+  print "0";
+  break;
+}
+
+print "2: 0 1 2 3 4"; // if中的break
+for (var a=0; a<10; a=a+1) {
+  print a;
+  if (a == 4) break;
+}
+var a = 0;
+while (a < 10) {
+  print a;
+  a = a + 1;
+  if (a == 4) break;
+}
+
+print "3: 0 1 2 3 4";
+var a = 0;
+for ( ; ; ) {
+  print a;
+  a = a + 1;
+  if (a == 4) break;
+}
+var a = 0;
+while (1) {
+  print a;
+  a = a + 1;
+  if (a == 4) break;
+}
+
+print "4: "; // 嵌套if中的break
+var a = 0;
+var b = 0;
+for ( ; ; ) {
+  a = a + 1;
+  b = b + 2;
+  if (a >= 100) {
+    if (b >=300) {
+      print a;
+      print b;
+      break;
+    }
+  }
+}
+var a = 0;
+var b = 0;
+while (1) {
+  a = a + 1;
+  b = b + 2;
+  if (a >= 100) {
+    if (b >= 300) {
+      print a;
+      print b;
+      break;
+    }
+  }
+}
+
+print "5: "; // 嵌套循环，最里面循环的break只退出最近的那个loop
+for (var a=0; a<3; a=a+1) {
+  for (var b=5; b>=0; b=b-1) {
+    if (b == 3) break;
+    print b;
+  }
+}
+print "-";
+for (var a=0; a<3; a=a+1) {
+  var b = 5;
+  while(b>=0) {
+    if (b == 3) break;
+    print b;
+    b = b - 1;
+  }
+}
+print "-";
+var a = 0;
+while (a < 3) {
+  a = a + 1;
+  var b = 5;
+  while(b>=0) {
+    if (b == 3) break;
+    print b;
+    b = b - 1;
+  }
+}
+
+
+// syntax error - break out of loop

@@ -81,10 +81,63 @@ class Interpreter implements Expr.Visitor<Object>,
 
     @Override
     public Void visitWhileStmt(Stmt.While stmt) { // 这个实现有点像直接Lox映射到Java
-        while (isTruthy(evaluate(stmt.condition))) { // 执行body后environment会不同，重新eval(cond)会不同
-            execute(stmt.body);
+        boolean notBreak = true;
+        while (notBreak && isTruthy(evaluate(stmt.condition))) { // 执行body后environment会不同，重新eval(cond)会不同
+            if (stmt.body instanceof Stmt.Block) { // 注意Block中的这种情况
+                notBreak = executeBlockWithBreak(notBreak, stmt.body);
+            } else {
+                notBreak = executeWithBreak(notBreak, stmt.body);
+            }
         }
         return null;
+    }
+
+    @Override
+    public Void visitBreakStmt(Stmt.Break stmt) { // do nothing, break只当成一个标记类，循环中遇到了直接break
+        return null;
+    }
+
+    private boolean executeBlockWithBreak(boolean notBreak, Stmt BlockStmt) {
+        List<Stmt> stmts = ((Stmt.Block) BlockStmt).statements;
+        for (Stmt st : stmts) {
+            if (st instanceof Stmt.Block) {
+                notBreak = executeBlockWithBreak(notBreak, st);
+            } else {
+                notBreak = executeWithBreak(notBreak, st);
+            }
+            if (!notBreak) break;
+        }
+        return notBreak;
+    }
+
+    private boolean executeWithBreak(boolean notBreak, Stmt nonBlockStmt) {
+        if (nonBlockStmt instanceof Stmt.Break) {
+            return false;
+        } else if (nonBlockStmt instanceof Stmt.If) {
+            Stmt.If ifStmt = (Stmt.If) nonBlockStmt;
+            boolean cond = isTruthy(evaluate(ifStmt.condition));
+            if (cond) {
+                if (ifStmt.thenBranch instanceof Stmt.Break) {
+                    return false;
+                } else if (ifStmt.thenBranch instanceof Stmt.Block) { // 特别小心if中子句仍有可能是BlockStmt
+                    return executeBlockWithBreak(notBreak, ifStmt.thenBranch);
+                } else {
+                    return executeWithBreak(notBreak, ifStmt.thenBranch);
+                }
+            } else if (ifStmt.elseBranch != null) {
+                if (ifStmt.elseBranch instanceof Stmt.Break) {
+                    return false;
+                } else if (ifStmt.elseBranch instanceof Stmt.Block) {
+                    return executeBlockWithBreak(notBreak, ifStmt.elseBranch);
+                } else {
+                    return executeWithBreak(notBreak, ifStmt.elseBranch);
+                }
+            }
+        } else if (nonBlockStmt != null) { // 其他的while/for/print都不会出现break，直接执行
+            execute(nonBlockStmt); // 这些子句的执行不会影响当前的notBreak
+            return notBreak;
+        }
+        return notBreak;
     }
 
     // 下面四个是Expr.Visitor<Object>的四个override函数
