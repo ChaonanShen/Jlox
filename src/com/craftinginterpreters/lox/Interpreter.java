@@ -1,10 +1,6 @@
 package com.craftinginterpreters.lox;
 
-import com.sun.corba.se.impl.ior.OldJIDLObjectKeyTemplate;
-
 import java.util.List;
-
-import static com.craftinginterpreters.lox.TokenType.*;
 
 class Interpreter implements Expr.Visitor<Object>,
                              Stmt.Visitor<Void> {
@@ -87,6 +83,17 @@ class Interpreter implements Expr.Visitor<Object>,
     public Void visitWhileStmt(Stmt.While stmt) { // 这个实现有点像直接Lox映射到Java
         while (isTruthy(evaluate(stmt.condition))) { // 执行body后environment会不同，重新eval(cond)会不同
             execute(stmt.body);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitForStmt(Stmt.For stmt) {
+        if (stmt.initStmt != null) execute(stmt.initStmt); // 之前一个bug：要判断这些是否为null！
+        for (;;) {
+            if (stmt.testExpr != null && !isTruthy(evaluate(stmt.testExpr))) break;
+            execute(stmt.body);
+            if (stmt.updateExpr != null) evaluate(stmt.updateExpr);
         }
         return null;
     }

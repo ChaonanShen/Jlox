@@ -1,3 +1,34 @@
-for (var a=1; a<10; a=a+1) {
+for (var a=0; a<5; a=a+1) {
   print a;
 }
+
+print "\n";
+
+var a = 0;
+for (a=0; a<5; a=a+1) {
+  print a;
+}
+
+print "\n";
+
+a = 0;
+for ( ; a<5; a=a+1) {
+  print a;
+}
+
+print "\n";
+
+a = 0;
+for ( ; a<5; ) {
+  print a;
+  a = a + 1;
+}
+
+print "\n";
+// 没有break语句，很难测试没有test expression的情况
+
+// a = 0;
+// for ( ; ; ) {
+//   print a;
+//   a = a + 1;
+// }

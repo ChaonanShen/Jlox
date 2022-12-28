@@ -29,11 +29,13 @@ public class Parser {
                  | statement ;
     varDecl     -> "var" IDENTIFIER ( "=" expression )? ";" ;
     statement   -> exprStmt
+                 | forStmt
                  | ifStmt
                  | printStmt
                  | whileStmt
                  | block ;
     exprStmt    -> expression ";" ;
+    forStmt     -> "for" "(" ( varDecl | exprStmt | ";" ) expression? ";" expression? ")" statement ;
     ifStmt      -> "if" "(" expression ")" statement ( "else" statement )? ;
     printStmt   -> "print" expression ";" ;
     whileStmt   -> "while" "(" expression ")" statement;
@@ -67,6 +69,7 @@ public class Parser {
         else if (match(LEFT_BRACE)) return new Stmt.Block(block());
         else if (match(IF)) return ifStatement();
         else if (match(WHILE)) return whileStatement();
+        else if (match(FOR)) return forStatement();
         else return expressionStatement(); // 没法从第一个token判断是否是expressionStatement
     }
 
@@ -88,6 +91,42 @@ public class Parser {
         consume(RIGHT_PAREN, "Expect ')' after while-condition.");
         Stmt body = statement();
         return new Stmt.While(condition, body);
+    }
+
+    private Stmt forStatement() {
+        Stmt initStmt;
+        Expr testExpr;
+        Expr updateExpr;
+        Stmt body;
+
+        consume(LEFT_PAREN, "Expect '(' after for.");
+
+        // init statement
+        if (match(SEMICOLON)) {
+            initStmt = null;
+        } else if (match(VAR)) {
+            initStmt = varDeclaration();
+        } else {
+            initStmt = expressionStatement();
+        }
+        // test expression
+        if (match(SEMICOLON)) {
+            testExpr = null;
+        } else {
+            testExpr = expression();
+            consume(SEMICOLON, "Expect ';' after test expression.");
+        }
+        // update expression -- 可能没有
+        if (match(RIGHT_PAREN)) {
+            updateExpr = null;
+        } else {
+            updateExpr = expression();
+            consume(RIGHT_PAREN, "Expect ')' after for condition.");
+        }
+
+        body = statement();
+
+        return new Stmt.For(initStmt, testExpr, updateExpr, body);
     }
 
     private Stmt printStatement() {
