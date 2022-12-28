@@ -25,10 +25,4 @@ for ( ; a<5; ) {
 }
 
 print "\n";
-// 没有break语句，很难测试没有test expression的情况
-
-// a = 0;
-// for ( ; ; ) {
-//   print a;
-//   a = a + 1;
-// }
+// 没有break语句，很难测试没有test expression的情况 - 只能写个死循环

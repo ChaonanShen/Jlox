@@ -87,17 +87,6 @@ class Interpreter implements Expr.Visitor<Object>,
         return null;
     }
 
-    @Override
-    public Void visitForStmt(Stmt.For stmt) {
-        if (stmt.initStmt != null) execute(stmt.initStmt); // 之前一个bug：要判断这些是否为null！
-        for (;;) {
-            if (stmt.testExpr != null && !isTruthy(evaluate(stmt.testExpr))) break;
-            execute(stmt.body);
-            if (stmt.updateExpr != null) evaluate(stmt.updateExpr);
-        }
-        return null;
-    }
-
     // 下面四个是Expr.Visitor<Object>的四个override函数
     @Override
     public Object visitAssignExpr(Expr.Assign expr) {

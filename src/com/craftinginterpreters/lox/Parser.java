@@ -1,6 +1,7 @@
 package com.craftinginterpreters.lox;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import static com.craftinginterpreters.lox.TokenType.*;
 
@@ -95,7 +96,7 @@ public class Parser {
 
     private Stmt forStatement() {
         Stmt initStmt;
-        Expr testExpr;
+        Expr conditionExpr;
         Expr updateExpr;
         Stmt body;
 
@@ -111,9 +112,9 @@ public class Parser {
         }
         // test expression
         if (match(SEMICOLON)) {
-            testExpr = null;
+            conditionExpr = null;
         } else {
-            testExpr = expression();
+            conditionExpr = expression();
             consume(SEMICOLON, "Expect ';' after test expression.");
         }
         // update expression -- 可能没有
@@ -126,7 +127,20 @@ public class Parser {
 
         body = statement();
 
-        return new Stmt.For(initStmt, testExpr, updateExpr, body);
+        // 直接转换成while循环 - 总归使用Block组合语句块
+        if (conditionExpr == null)
+            conditionExpr = new Expr.Literal(true);
+
+        if (updateExpr != null) { // merge body & updateExpr
+            body = new Stmt.Block(Arrays.asList(body, new Stmt.Expression(updateExpr)));
+        }
+        body = new Stmt.While(conditionExpr, body);
+
+        if (initStmt != null) { // merge initStmt & body (注意initStmt只执行一次)
+            body = new Stmt.Block(Arrays.asList(initStmt, body));
+        }
+
+        return body;
     }
 
     private Stmt printStatement() {
