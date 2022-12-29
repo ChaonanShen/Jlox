@@ -79,7 +79,10 @@ public class Parser {
     }
     private Stmt.Function function(String kind) { // 区分normal functions & class methods
         Token name = consume(IDENTIFIER, "Expect " + kind + " name.");
+        return functionLeft(name, kind);
+    }
 
+    private Stmt.Function functionLeft(Token name, String kind) {
         consume(LEFT_PAREN, "Expect '(' before parameters.");
         List<Token> params = new ArrayList<>();
         if (!check(RIGHT_PAREN)) {
@@ -225,7 +228,8 @@ public class Parser {
     factor     -> unary ( ( "/" | "*" ) unary )* ;
     unary      -> ( "!" | "-" ) unary | call ;
     call       -> primary ( "(" arguments? ")" )* ;
-    arguments  -> expression ( "," expression )* ;
+    arguments  -> ( expression | lambda ) ( "," ( expression | lambda ) )* ;
+    lambda     -> "fun" "(" parameters? ")" block ; // 借用Stmt中function的匹配，只不过没有了函数名
     primary    -> NUMBER | STRING
                 | "true" | "false" | "nil"
                 | "(" expression ")" | IDENTIFIER;
@@ -335,7 +339,6 @@ public class Parser {
 
     private Expr call() {
         Expr callee = primary();
-
         while (match(LEFT_PAREN)) { // 进入第一个函数调用
             List<Expr> args = new ArrayList<>();
             if (!check(RIGHT_PAREN)) { // 有参数
@@ -343,7 +346,11 @@ public class Parser {
                     if (args.size() >= 255) { // instance method最多容纳254 args，因为还有个this参数
                         error(peek(), "Can't have more than 255 arguments.");
                     }
-                    args.add(expression());
+                    if (match(FUN)) {
+                        args.add(new Expr.Lambda(functionLeft(null, "lambda")));
+                    } else {
+                        args.add(expression());
+                    }
                 } while(match(COMMA));
             }
             Token paren = consume(RIGHT_PAREN, "Expect ')' after arguments.");

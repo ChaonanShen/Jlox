@@ -200,6 +200,11 @@ class Interpreter implements Expr.Visitor<Object>,
     }
 
     @Override
+    public Object visitLambdaExpr(Expr.Lambda expr) {
+        return new LoxFunction(expr.declaration, environment); // 传入当前environment，这样lambda就能使用当前定义的local variables
+    }
+
+    @Override
     public Object visitGroupingExpr(Expr.Grouping expr) {
         return evaluate(expr.expression);
     }

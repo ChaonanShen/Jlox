@@ -1,8 +1,20 @@
+// lambda作为参数传递给函数
 fun thrice(fn) {
   for (var i=1; i<=3; i=i+1)
     fn(i);
+  print fn;
+}
+
+fun square(n) {
+  print n * n;
 }
 
 thrice(fun (a) {
   print a;
 });
+
+thrice(square);
+
+// 定义lambda并直接调用
+// var a = 1;
+// fun () { print a; }(); // 现在把这个也当成funcDecl进行了 -- 最好的办法是lambdas直接用lambda开头不用fun
