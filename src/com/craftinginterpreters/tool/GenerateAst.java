@@ -17,6 +17,7 @@ public class GenerateAst {
         defineAst(outputDir, "Expr", Arrays.asList(
             "Assign   : Token name, Expr value",
             "Binary   : Expr left, Token operator, Expr right",
+            "Call     : Expr callee, Token paren, List<Expr> arguments", // 记录paren是为了出现runtime error时能报出具体位置
             "Grouping : Expr expression",
             "Literal  : Object value",
             "Logical  : Expr left, Token operator, Expr right",

@@ -47,7 +47,7 @@ public class Parser {
         try {
             if (match(VAR)) return varDeclaration();
             else return statement();
-        } catch (ParseError error) {
+        } catch (ParseError error) { // 注意只有进入panic mode后才会throw error，那时候parser is confused，需要synchronize()将parser调整到能继续parse的状态
             synchronize();
             return null;
         }
@@ -178,9 +178,12 @@ public class Parser {
     comparison -> term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
     term       -> factor ( ( "-" | "+" ) factor )*;
     factor     -> unary ( ( "/" | "*" ) unary )* ;
-    unary      -> ( "!" | "-" ) unary
-                | primary ;
-    primary    -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER;
+    unary      -> ( "!" | "-" ) unary | call ;
+    call       -> primary ( "(" arguments? ")" )* ;
+    arguments  -> expression ( "," expression )* ;
+    primary    -> NUMBER | STRING
+                | "true" | "false" | "nil"
+                | "(" expression ")" | IDENTIFIER;
      */
 
     private Expr expression() {
@@ -281,8 +284,34 @@ public class Parser {
             Expr right = unary();
             return new Expr.Unary(operator, right);
         } else {
-            return primary();
+            return call();
         }
+    }
+
+    private Expr call() {
+        Expr callee = primary();
+
+        while (match(LEFT_PAREN)) { // 进入第一个函数调用
+            List<Expr> args = new ArrayList<>();
+            if (!check(RIGHT_PAREN)) { // 有参数
+                args = arguments();
+            }
+            Token paren = consume(RIGHT_PAREN, "Expect ')' after arguments.");
+            callee = new Expr.Call(callee, paren, args); // callee可能已经是个函数调用Expr.Call
+        }
+
+        return callee;
+    }
+
+    private List<Expr> arguments() { // 只有明确至少有一个args才会被调用
+        List<Expr> exprs = new ArrayList<>();
+        do {
+            if (exprs.size() >= 255) { // instance method最多容纳254 args，因为还有个this参数
+                error(peek(), "Can't have more than 255 arguments.");
+            }
+            exprs.add(expression());
+        } while(match(COMMA));
+        return exprs;
     }
 
     private Expr primary() {
