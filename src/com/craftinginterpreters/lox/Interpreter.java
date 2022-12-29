@@ -42,7 +42,9 @@ class Interpreter implements Expr.Visitor<Object>,
         return expr.accept(this); // 比如Binary就会调用this(interpreter).visitBinaryExpr(expr)
     }
 
-    private void executeBlock(List<Stmt> statements, Environment environment) {
+    // 注意不光是普通block执行，函数body执行也用executeBlock，只不过传入的environment是函数自身作用域
+    // 让interpreter在一个新environment下执行，执行结束恢复原先环境
+    public void executeBlock(List<Stmt> statements, Environment environment) {
         Environment previous = this.environment;
         try {
             this.environment = environment; // 直接替换当前Interpreter的environment
@@ -63,6 +65,13 @@ class Interpreter implements Expr.Visitor<Object>,
     }
 
     @Override
+    public Void visitFunctionStmt(Stmt.Function stmt) {
+        LoxFunction function = new LoxFunction(stmt);
+        environment.define(stmt.name.lexeme, function);
+        return null;
+    }
+
+    @Override
     public Void visitExpressionStmt(Stmt.Expression stmt) {
         evaluate(stmt.expression);
         return null;
@@ -73,6 +82,14 @@ class Interpreter implements Expr.Visitor<Object>,
         Object value = evaluate(stmt.expression);
         System.out.println(stringify(value));
         return null;
+    }
+
+    @Override
+    public Void visitReturnStmt(Stmt.Return stmt) {
+        Object value = null;
+        if (stmt.value != null) value = evaluate(stmt.value);
+
+        throw new Return(value);
     }
 
     @Override

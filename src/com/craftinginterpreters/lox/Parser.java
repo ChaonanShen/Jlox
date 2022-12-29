@@ -27,18 +27,27 @@ public class Parser {
     /*
     program     -> declaration* EOF ;
     declaration -> varDecl
+                 | funDecl
                  | statement ;
+
     varDecl     -> "var" IDENTIFIER ( "=" expression )? ";" ;
+
+    funDecl     -> "fun" function ;
+    function    -> IDENTIFIER "(" parameters? ")" block ;
+    parameters  -> IDENTIFIER ( "," IDENTIFIER )* ;
+
     statement   -> exprStmt
                  | forStmt
                  | ifStmt
                  | printStmt
+                 | returnStmt
                  | whileStmt
                  | block ;
     exprStmt    -> expression ";" ;
     forStmt     -> "for" "(" ( varDecl | exprStmt | ";" ) expression? ";" expression? ")" statement ;
     ifStmt      -> "if" "(" expression ")" statement ( "else" statement )? ;
     printStmt   -> "print" expression ";" ;
+    returnStmt  -> "return" expression? ";" ;
     whileStmt   -> "while" "(" expression ")" statement;
     block       -> "{" declaration* "}" ;
     */
@@ -46,7 +55,8 @@ public class Parser {
     private Stmt declaration() {
         try {
             if (match(VAR)) return varDeclaration();
-            else return statement();
+            if (match(FUN)) return funDeclaration();
+            return statement();
         } catch (ParseError error) { // 注意只有进入panic mode后才会throw error，那时候parser is confused，需要synchronize()将parser调整到能继续parse的状态
             synchronize();
             return null;
@@ -64,6 +74,29 @@ public class Parser {
         consume(SEMICOLON, "Expect ';' after variable declaration.");
         return new Stmt.Var(name, initializer);
     }
+    private Stmt funDeclaration() {
+        return function("function");
+    }
+    private Stmt.Function function(String kind) { // 区分normal functions & class methods
+        Token name = consume(IDENTIFIER, "Expect " + kind + " name.");
+
+        consume(LEFT_PAREN, "Expect '(' before parameters.");
+        List<Token> params = new ArrayList<>();
+        if (!check(RIGHT_PAREN)) {
+            // 有形参
+            do {
+                if (params.size() >= 255) {
+                    error(peek(), "Can't have more than 255 parameters.");
+                }
+                params.add(consume(IDENTIFIER, "Expect parameter name."));
+            } while (match(COMMA));
+        }
+        consume(RIGHT_PAREN, "Expect ')' after parameters.");
+
+        consume(LEFT_BRACE, "Expect '{' before " + kind + " body.");
+        List<Stmt> body = block();
+        return new Stmt.Function(name, params, body);
+    }
 
     private Stmt statement() {
         if (match(PRINT)) return printStatement();
@@ -71,6 +104,7 @@ public class Parser {
         else if (match(IF)) return ifStatement();
         else if (match(WHILE)) return whileStatement();
         else if (match(FOR)) return forStatement();
+        else if (match(RETURN)) return returnStatement();
         else return expressionStatement(); // 没法从第一个token判断是否是expressionStatement
     }
 
@@ -143,6 +177,16 @@ public class Parser {
         return body;
     }
 
+    private Stmt returnStatement() {
+        Token keyword = previous();
+        Expr expr = null;
+        if (!check(SEMICOLON)) {
+            expr = expression();
+        }
+        consume(SEMICOLON, "Expect ';' after return value.");
+        return new Stmt.Return(keyword, expr);
+    }
+
     private Stmt printStatement() {
         Expr value = expression(); // 匹配一个expression
         consume(SEMICOLON, "Expect ';' after value."); // must be ; at last
@@ -156,6 +200,7 @@ public class Parser {
     }
 
     private List<Stmt> block() { // 之后的function body等也都复用block()
+        // 注意block前已经匹配掉左花括号{
         List<Stmt> statements = new ArrayList<>();
 
         while (!check(RIGHT_BRACE) && !isAtEnd()) {
@@ -294,24 +339,18 @@ public class Parser {
         while (match(LEFT_PAREN)) { // 进入第一个函数调用
             List<Expr> args = new ArrayList<>();
             if (!check(RIGHT_PAREN)) { // 有参数
-                args = arguments();
+                do {
+                    if (args.size() >= 255) { // instance method最多容纳254 args，因为还有个this参数
+                        error(peek(), "Can't have more than 255 arguments.");
+                    }
+                    args.add(expression());
+                } while(match(COMMA));
             }
             Token paren = consume(RIGHT_PAREN, "Expect ')' after arguments.");
             callee = new Expr.Call(callee, paren, args); // callee可能已经是个函数调用Expr.Call
         }
 
         return callee;
-    }
-
-    private List<Expr> arguments() { // 只有明确至少有一个args才会被调用
-        List<Expr> exprs = new ArrayList<>();
-        do {
-            if (exprs.size() >= 255) { // instance method最多容纳254 args，因为还有个this参数
-                error(peek(), "Can't have more than 255 arguments.");
-            }
-            exprs.add(expression());
-        } while(match(COMMA));
-        return exprs;
     }
 
     private Expr primary() {

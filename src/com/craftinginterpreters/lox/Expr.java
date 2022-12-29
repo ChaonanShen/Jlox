@@ -50,7 +50,7 @@ abstract class Expr {
     Call(Expr callee, Token paren, List<Expr> arguments) {
       this.callee = callee;
       this.paren = paren;
-      this.arguments = arguments; // null就表明无参数
+      this.arguments = arguments;
     }
 
     @Override
