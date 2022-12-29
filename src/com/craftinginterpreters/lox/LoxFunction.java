@@ -4,13 +4,15 @@ import java.util.List;
 
 public class LoxFunction implements LoxCallable {
     private final Stmt.Function declaration;
-    LoxFunction(Stmt.Function declaration) {
+    private final Environment closure; // 直接把函数定义时的environment记录
+    LoxFunction(Stmt.Function declaration, Environment closure) {
         this.declaration = declaration;
+        this.closure = closure;
     }
 
     @Override
     public Object call(Interpreter interpreter, List<Object> arguments) {
-        Environment environment = new Environment(interpreter.globals);
+        Environment environment = new Environment(closure);
         // 注意是函数的environment直接父亲是globals，而不是interpreter.environment这个当前作用域！函数作用域是独立的！
 
         for (int i = 0; i < declaration.params.size(); i++) {
